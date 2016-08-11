@@ -15,15 +15,26 @@ def yes_no?(question)
 	end
 end
 
-game = HangmanUI.new
+@game = HangmanUI.new
 
-game.welcome
-game.start
-game.play
+@game.welcome
+@game.start
+
+def new_game
+	if yes_no?("Do you want to load a saved game?")
+		@game.load
+		@game.play(true)
+	else
+		@game.play
+	end
+end
+
+new_game
 
 while yes_no?("Would you like to play again ?")
-	game.play	
+	new_game
 end
 
 puts ""
 puts "Thanks for playing !"
+2.times { puts "" }

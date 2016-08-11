@@ -1,9 +1,10 @@
+require 'yaml'
 require './lib/hangman_game'
 
 class HangmanUI
 
 	def initialize
-		@game = HangmanGame.new
+		@game = nil
 		@playing_board = Proc.new {
 			system('clear')
 
@@ -63,16 +64,16 @@ class HangmanUI
 		gets
 	end
 
-	def play
+	def play(game_loaded = false)
 
-		@game = HangmanGame.new
+		@game = HangmanGame.new unless game_loaded
 
 		until @game.game_over
 
 			@playing_board.call
 
 			indent
-			print "Guess a letter : "
+			print "Guess a letter or type 'save' to save your game : "
 			@game.new_guess
 		end
 
@@ -82,8 +83,57 @@ class HangmanUI
 			puts "Congratulations you won !"
 		elsif @game.game_over == "lose"
 			puts "You lose, no more guesses left..."
+		elsif @game.game_over == "save"
+			save
 		end
 		2.times { puts "" }
+	end
+
+	def save
+		@game.save = false
+		@game.dictionary = nil
+
+		Dir.mkdir("saved_games") unless Dir.exists?("saved_games")
+		filename = "saved_games/#{Time.now.day}_#{Time.now.month}_#{Time.now.year}_at_#{Time.now.hour}h#{Time.now.min}m#{Time.now.sec}"
+		
+		File.open(filename,'w') do |file|
+    	file.puts YAML::dump(@game)
+  	end
+
+		puts "Game saved !"
+	end
+
+	def load
+		if !Dir.exists?("saved_games") || Dir.entries("saved_games").size < 3
+			puts "Sorry there are no saved games."
+			print "Press <enter> to start a new game "
+			gets
+			@game = HangmanGame.new
+		else
+			puts "List of the saved games :"
+			Dir.entries("saved_games").each_with_index do |save, index|
+				next if index < 2
+				puts "#{index - 1} : #{save}"
+			end
+			print "Choose the game you want to load :"
+			
+			correct_save = false
+			until correct_save
+				save_id = gets.chomp
+				begin
+					save_id = save_id.to_i + 1
+					if save_id.between?(2, (Dir.entries("saved_games").size - 1))
+						correct_save = true
+					else
+						puts "Use must enter a valid id between 1 and #{Dir.entries("saved_games").size - 2}"
+					end
+				rescue
+					puts "Use must enter a valid id between 1 and #{Dir.entries("saved_games").size - 2}"
+				end
+			end
+
+			@game = YAML::load(File.read "saved_games/#{Dir.entries("saved_games")[save_id]}")
+		end
 	end
 
 end

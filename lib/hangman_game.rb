@@ -2,7 +2,7 @@
 
 class HangmanGame
 
-	attr_accessor :dictionary, :secret_word, :guesses_left, :all_guesses, :current_guess  ## for the tests
+	attr_accessor :dictionary, :secret_word, :guesses_left, :all_guesses, :current_guess, :save  ## for the tests
 
 	def initialize
 #		binding.pry
@@ -11,6 +11,7 @@ class HangmanGame
 		@guesses_left = 10
 		@current_guess = ""
 		@all_guesses = []
+		@save = false
 	end
 
 	def select_secret_word(dictionary)
@@ -25,6 +26,8 @@ class HangmanGame
 		until valid_guess
 			guess = gets.chomp
 
+			return @save = true if guess == "save"
+
 			if guess.downcase.match(/[a-z]/) && guess.size == 1
 				if @all_guesses.include?(guess)
 					puts "You already used tried this letter, please try another one"
@@ -32,7 +35,7 @@ class HangmanGame
 					valid_guess = true
 				end
 			else
-				puts "Please only enter one letter"
+				puts "Please only enter one letter or 'save' to save the game"
 			end
 		end
 
@@ -43,7 +46,7 @@ class HangmanGame
 
 	def feedback(guess = @all_guesses)
 
-		return @secret_word.split("").join(" ") if game_over
+		return @secret_word.split("").join(" ") if game_over == "won" || game_over == "lose"
 
 		correct_letters = @secret_word.split("") & guess
 
@@ -66,6 +69,8 @@ class HangmanGame
 			return "won"
 		elsif @guesses_left == 0
 			return "lose"
+		elsif @save
+			return "save"
 		end
 		false
 	end
