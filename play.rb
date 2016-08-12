@@ -15,17 +15,17 @@ def yes_no?(question)
 	end
 end
 
-@game = HangmanUI.new
+@ui = HangmanUI.new
 
-@game.welcome
-@game.start
+@ui.welcome
+@ui.start
 
 def new_game
 	if yes_no?("Do you want to load a saved game?")
-		@game.load
-		@game.play(true)
+		@ui.load
+		@ui.play(true)
 	else
-		@game.play
+		@ui.play
 	end
 end
 

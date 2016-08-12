@@ -94,7 +94,7 @@ class HangmanUI
 		@game.dictionary = nil
 
 		Dir.mkdir("saved_games") unless Dir.exists?("saved_games")
-		filename = "saved_games/#{Time.now.day}_#{Time.now.month}_#{Time.now.year}_at_#{Time.now.hour}h#{Time.now.min}m#{Time.now.sec}"
+		filename = "saved_games/#{Time.now.day}_#{Time.now.month}_#{Time.now.year}_at_#{Time.now.hour}h#{Time.now.min}m#{Time.now.sec}.sav"
 		
 		File.open(filename,'w') do |file|
     	file.puts YAML::dump(@game)
@@ -104,16 +104,25 @@ class HangmanUI
 	end
 
 	def load
-		if !Dir.exists?("saved_games") || Dir.entries("saved_games").size < 3
+		Dir.mkdir("saved_games") unless Dir.exists?("saved_games")
+		
+		save_files = Dir.entries("saved_games").select { |file| file[-4..-1] == ".sav"}
+
+		if save_files == []
 			puts "Sorry there are no saved games."
 			print "Press <enter> to start a new game "
 			gets
 			@game = HangmanGame.new
 		else
+			system('clear')
 			puts "List of the saved games :"
-			Dir.entries("saved_games").each_with_index do |save, index|
-				next if index < 2
-				puts "#{index - 1} : #{save}"
+			save_files.each_with_index do |filename, index|
+				@game = YAML::load(File.read "saved_games/#{save_files[index]}")
+				puts "#{index + 1} :   #{@game.feedback}"
+				puts "      Incorect letters already tried : #{@game.incorrect_letters}"
+				puts "      Guesses left : #{@game.guesses_left}"
+				puts "      Date and time of save : #{filename[0..-5]}"
+				2.times { puts "" }
 			end
 			print "Choose the game you want to load :"
 			
@@ -121,18 +130,18 @@ class HangmanUI
 			until correct_save
 				save_id = gets.chomp
 				begin
-					save_id = save_id.to_i + 1
-					if save_id.between?(2, (Dir.entries("saved_games").size - 1))
+					save_id = save_id.to_i - 1
+					if save_id.between?(0, (save_files.size - 1))
 						correct_save = true
 					else
-						puts "Use must enter a valid id between 1 and #{Dir.entries("saved_games").size - 2}"
+						puts "Use must enter a valid id between 1 and #{save_files.size - 1}"
 					end
 				rescue
-					puts "Use must enter a valid id between 1 and #{Dir.entries("saved_games").size - 2}"
+					puts "Use must enter a valid id between 1 and #{save_files.size - 1}"
 				end
 			end
 
-			@game = YAML::load(File.read "saved_games/#{Dir.entries("saved_games")[save_id]}")
+			@game = YAML::load(File.read "saved_games/#{save_files[save_id]}")
 		end
 	end
 
